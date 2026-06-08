@@ -2,12 +2,12 @@
 # shellcheck shell=bash
 # 法人番号データ (国税庁 法人番号公表サイト)
 #
-# セッションクッキー + CSRF トークン + POST で全件 ZIP を自動取得し、
-# Shift-JIS から UTF-8 に変換、住所列を抽出して重複排除する。
+# セッションクッキー + CSRF トークン + POST で CSV Unicode (UTF-8) 全件 ZIP を取得し、
+# 住所列を抽出・重複排除する。
 #
 # 出力:
-#   data/raw/houjin.csv     (UTF-8 変換済み、約 1.2GB)
-#   data/prc/houjin.txt     (住所重複排除、約 250MB / 約 445 万件)
+#   data/raw/houjin.csv     (UTF-8)
+#   data/prc/houjin.txt     (住所重複排除、約 445 万件)
 
 set -euo pipefail
 
@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 init_dirs "$SCRIPT_DIR"
 
-require_command curl unzip iconv
+require_command curl unzip
 
 fetch_houjin_zip() {
     # 標準出力に取得した ZIP のパスを出力する
@@ -33,8 +33,12 @@ fetch_houjin_zip() {
     local token fileno
     token=$(grep -oE 'name="jp\.go\.nta[^"]*token" value="[^"]*"' "$page" \
             | sed -E 's/.*value="([^"]*)"/\1/' | head -1)
-    # CSV Shift-JIS 全国 = ページ先頭の doDownload
-    fileno=$(grep -oE 'doDownload\([0-9]+\)' "$page" | head -1 | grep -oE '[0-9]+')
+    # CSV Unicode 全国 = id="csv-unicode" セクションから次の h2 までで最初の doDownload
+    fileno=$(awk '
+        /id="csv-unicode"/  { in_sec = 1; next }
+        in_sec && /<h2 class="title"/ { exit }
+        in_sec
+    ' "$page" | grep -oE 'doDownload\([0-9]+\)' | head -1 | grep -oE '[0-9]+')
 
     if [ -z "$token" ] || [ -z "$fileno" ]; then
         log_error "token/fileno の抽出に失敗 (token='$token' fileno='$fileno')"
@@ -71,19 +75,8 @@ if [ ! -f "$RAW_DIR/houjin.csv" ]; then
         exit 1
     fi
 
-    log_info "  ZIP: $zip_file を解凍中..."
-    tmp_csv=$(mktemp -t houjin_csv.XXXXXX)
-    unzip -p "$zip_file" '00_zenkoku_all_*.csv' > "$tmp_csv"
-
-    log_info "  エンコーディング検出..."
-    if head -c 1000 "$tmp_csv" | grep -q '北海道\|東京都\|大阪府'; then
-        log_info "  -> UTF-8 として保存"
-        mv "$tmp_csv" "$RAW_DIR/houjin.csv"
-    else
-        log_info "  -> Shift-JIS -> UTF-8 変換"
-        iconv -f SHIFT_JIS -t UTF-8 "$tmp_csv" > "$RAW_DIR/houjin.csv"
-        rm -f "$tmp_csv"
-    fi
+    log_info "  ZIP: $zip_file を解凍..."
+    unzip -p "$zip_file" '00_zenkoku_all_*.csv' > "$RAW_DIR/houjin.csv"
     rm -f "$zip_file"
     log_info "  -> raw/houjin.csv 作成完了"
 else
@@ -91,7 +84,8 @@ else
 fi
 
 log_info "  住所抽出中 (列10-12 を結合・重複排除)..."
-# LC_ALL=C で高速ソート
+# LC_ALL=C で高速ソート、grep で空行 (住所3列がすべて空の法人) を除外
 cut -d',' -f10,11,12 "$RAW_DIR/houjin.csv" | tr -d '"' | sed 's/,//g' \
+    | grep -v '^$' \
     | LC_ALL=C sort -u > "$PRC_DIR/houjin.txt"
 log_info "  -> prc/houjin.txt 作成 ($(wc -l < "$PRC_DIR/houjin.txt") 件)"
