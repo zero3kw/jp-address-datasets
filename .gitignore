@@ -1,0 +1,8 @@
+data/*
+!data/.gitkeep
+
+*.bak
+*~
+.DS_Store
+.vscode/
+.idea/
