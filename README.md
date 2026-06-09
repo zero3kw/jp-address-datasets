@@ -15,7 +15,7 @@
 | `jat` | Japanese Address Testdata | [t-sagara/Japanese-Address-testdata](https://github.com/t-sagara/Japanese-Address-testdata) | 76 | [MIT](https://github.com/t-sagara/Japanese-Address-testdata/blob/main/LICENSE) |
 | `nja` | Normalize Japanese Addresses test corpus | [geolonia/normalize-japanese-addresses](https://github.com/geolonia/normalize-japanese-addresses) | 7,191 | [MIT](https://github.com/geolonia/normalize-japanese-addresses/blob/master/LICENSE.txt) |
 | `school` | 国土数値情報 学校等 (P29、幼稚園〜大学・専修学校) | [国土交通省 国土数値情報](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P29.html) | 53,842 | [国土数値情報利用約款](https://nlftp.mlit.go.jp/ksj/other/agreement.html) |
-| `houjin` | 法人番号公表サイト 全件データの所在地 | [国税庁](https://www.houjin-bangou.nta.go.jp/download/zenken/) | 4,456,565 | [利用規約](https://www.houjin-bangou.nta.go.jp/riyokiyaku/) |
+| `nta-houjin` | 法人番号公表サイト 全件データの所在地 | [国税庁](https://www.houjin-bangou.nta.go.jp/download/zenken/) | 4,456,565 | [利用規約](https://www.houjin-bangou.nta.go.jp/riyokiyaku/) |
 | `abr` | アドレス・ベース・レジストリ | [デジタル庁 ABR](https://dataset.address-br.digital.go.jp/) | 211,761,061 | [利用規約](https://www.digital.go.jp/policies/base_registry_address_tos) |
 
 各データの利用にあたっては必ず出典元のライセンス・利用規約を確認してください。
@@ -45,8 +45,8 @@ make download
 ```bash
 make download-jat
 make download-nja
+make download-nta-houjin
 make download-school
-make download-houjin
 make download-abr
 ```
 
@@ -81,7 +81,7 @@ make lint
 |---|---|---|
 | jat | `raw/jat.csv` | `prc/jat.txt` |
 | nja | `raw/nja.csv` | `prc/nja.txt` |
-| houjin | `raw/houjin.csv` | `prc/houjin.txt` |
+| nta-houjin | `raw/nta-houjin.csv` | `prc/nta-houjin.txt` |
 | school | `raw/school.geojson` | `prc/school.txt` |
 | abr (pref) | `raw/abr/mt_city/*.csv` | `prc/abr_pref.txt` |
 | abr (city) | `raw/abr/mt_city/*.csv` | `prc/abr_city.txt` |

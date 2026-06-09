@@ -16,12 +16,12 @@ usage() {
 Usage: $0 [dataset]
 
 Datasets:
-  all    - 全データセット (デフォルト)
-  jat    - Japanese Address Testdata (t-sagara)
-  nja    - Normalize Japanese Addresses (geolonia)
-  houjin - 法人番号データ (自動取得)
-  school - 国土数値情報 学校データ (MLIT)
-  abr    - ABRデータ (DCAT feed から取得)
+  all        - 全データセット (デフォルト)
+  jat        - Japanese Address Testdata (t-sagara)
+  nja        - Normalize Japanese Addresses (geolonia)
+  nta-houjin - 法人番号データ (国税庁)
+  school     - 国土数値情報 学校データ (国交省)
+  abr        - ABRデータ (デジタル庁)
 
 各データセットで以下のファイルを生成します:
   data/raw/{dataset}.{ext}  取得元データ
@@ -42,13 +42,13 @@ case "$DATASET" in
         echo ""
         run nja
         echo ""
-        run houjin || true   # 自動取得失敗時も他データセットを続行
+        run nta-houjin || true   # 自動取得失敗時も他データセットを続行
         echo ""
         run school
         echo ""
         run abr || true
         ;;
-    jat|nja|houjin|school|abr) run "$DATASET" ;;
+    jat|nja|nta-houjin|school|abr) run "$DATASET" ;;
     *)
         log_error "Unknown dataset '$DATASET'"
         usage

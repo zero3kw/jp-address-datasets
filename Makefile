@@ -1,4 +1,4 @@
-.PHONY: help docker-build download download-jat download-nja download-houjin download-school download-abr lint clean
+.PHONY: help docker-build download download-jat download-nja download-nta-houjin download-school download-abr lint clean
 
 SCRIPTS      := $(wildcard scripts/*.sh)
 DOCKER_IMAGE := jp-address-datasets:latest
@@ -9,15 +9,15 @@ DOCKER_RUN   := docker run --rm -v "$(HOST_DIR):/work" -w /work --user "$(shell 
 
 help:
 	@echo "Targets (すべて Docker 経由で実行):"
-	@echo "  make docker-build     - Docker イメージをビルド"
-	@echo "  make download         - 全データセットを取得"
-	@echo "  make download-jat     - JAT (t-sagara)"
-	@echo "  make download-nja     - NJA (geolonia)"
-	@echo "  make download-houjin  - 法人番号 (自動取得)"
-	@echo "  make download-school  - 国土数値情報 学校"
-	@echo "  make download-abr     - ABR (DCAT feed から自動取得)"
-	@echo "  make lint             - shellcheck"
-	@echo "  make clean            - data/ 配下を全削除"
+	@echo "  make docker-build        - Docker イメージをビルド"
+	@echo "  make download            - 全データセットを取得"
+	@echo "  make download-jat        - JAT (t-sagara)"
+	@echo "  make download-nja        - NJA (geolonia)"
+	@echo "  make download-nta-houjin - 法人番号 (国税庁)"
+	@echo "  make download-school     - 国土数値情報 学校 (国交省)"
+	@echo "  make download-abr        - ABR (デジタル庁)"
+	@echo "  make lint                - shellcheck"
+	@echo "  make clean               - data/ 配下を全削除"
 
 docker-build:
 	docker build -t $(DOCKER_IMAGE) .
@@ -31,8 +31,8 @@ download-jat: docker-build
 download-nja: docker-build
 	$(DOCKER_RUN) bash scripts/download_datasets.sh nja
 
-download-houjin: docker-build
-	$(DOCKER_RUN) bash scripts/download_datasets.sh houjin
+download-nta-houjin: docker-build
+	$(DOCKER_RUN) bash scripts/download_datasets.sh nta-houjin
 
 download-school: docker-build
 	$(DOCKER_RUN) bash scripts/download_datasets.sh school

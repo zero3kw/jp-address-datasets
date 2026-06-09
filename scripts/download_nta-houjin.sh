@@ -6,8 +6,8 @@
 # 住所列を抽出・重複排除する。
 #
 # 出力:
-#   data/raw/houjin.csv     (UTF-8)
-#   data/prc/houjin.txt     (住所重複排除、約 445 万件)
+#   data/raw/nta-houjin.csv     (UTF-8)
+#   data/prc/nta-houjin.txt     (住所重複排除、約 445 万件)
 
 set -euo pipefail
 
@@ -18,14 +18,14 @@ init_dirs "$SCRIPT_DIR"
 
 require_command curl unzip
 
-fetch_houjin_zip() {
+fetch_nta_houjin_zip() {
     # 標準出力に取得した ZIP のパスを出力する
     local ua="Mozilla/5.0 (jp-address-datasets)"
     local base_url="https://www.houjin-bangou.nta.go.jp/download/zenken/"
     local cookies page out_zip
-    cookies=$(mktemp -t houjin_cookies.XXXXXX)
-    page=$(mktemp -t houjin_page.XXXXXX.html)
-    out_zip=$(mktemp -t houjin.XXXXXX.zip)
+    cookies=$(mktemp -t nta_houjin_cookies.XXXXXX)
+    page=$(mktemp -t nta_houjin_page.XXXXXX.html)
+    out_zip=$(mktemp -t nta_houjin.XXXXXX.zip)
 
     log_info "  ダウンロードページから token/fileno を取得..." >&2
     curl -fsSL -A "$ua" -c "$cookies" "$base_url" -o "$page"
@@ -66,26 +66,26 @@ fetch_houjin_zip() {
     echo "$out_zip"
 }
 
-log_info "[houjin] 法人番号データ"
+log_info "[nta-houjin] 法人番号データ"
 
-if [ ! -f "$RAW_DIR/houjin.csv" ]; then
+if [ ! -f "$RAW_DIR/nta-houjin.csv" ]; then
     log_info "  法人番号公表サイトから自動取得します"
-    if ! zip_file=$(fetch_houjin_zip); then
+    if ! zip_file=$(fetch_nta_houjin_zip); then
         log_error "自動取得に失敗しました"
         exit 1
     fi
 
     log_info "  ZIP: $zip_file を解凍..."
-    unzip -p "$zip_file" '00_zenkoku_all_*.csv' > "$RAW_DIR/houjin.csv"
+    unzip -p "$zip_file" '00_zenkoku_all_*.csv' > "$RAW_DIR/nta-houjin.csv"
     rm -f "$zip_file"
-    log_info "  -> raw/houjin.csv 作成完了"
+    log_info "  -> raw/nta-houjin.csv 作成完了"
 else
-    log_info "  -> raw/houjin.csv 既存 (スキップ)"
+    log_info "  -> raw/nta-houjin.csv 既存 (スキップ)"
 fi
 
 log_info "  住所抽出中 (列10-12 を結合・重複排除)..."
 # LC_ALL=C で高速ソート、grep で空行 (住所3列がすべて空の法人) を除外
-cut -d',' -f10,11,12 "$RAW_DIR/houjin.csv" | tr -d '"' | sed 's/,//g' \
+cut -d',' -f10,11,12 "$RAW_DIR/nta-houjin.csv" | tr -d '"' | sed 's/,//g' \
     | grep -v '^$' \
-    | LC_ALL=C sort -u > "$PRC_DIR/houjin.txt"
-log_info "  -> prc/houjin.txt 作成 ($(wc -l < "$PRC_DIR/houjin.txt") 件)"
+    | LC_ALL=C sort -u > "$PRC_DIR/nta-houjin.txt"
+log_info "  -> prc/nta-houjin.txt 作成 ($(wc -l < "$PRC_DIR/nta-houjin.txt") 件)"
